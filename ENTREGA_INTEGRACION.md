@@ -4,7 +4,7 @@ El cajero está publicado en https://node3-atm.onrender.com y conectado al Banco
 
 **Correcciones aplicadas:** recuperación con API Key rotada sin liberar efectivo pendiente; validación del origen público detrás del proxy; política de cabeceras que permite iniciar sesión desde Chrome; documentación alineada con el Core disponible; despliegue continuo desde GitHub Actions después de las pruebas.
 
-**Resultado real:** la sucursal abrió la cuenta `13447350977369660092` con $1,000; el cajero retiró $300 y los tres nodos confirmaron $700. Solo se registró un retiro. Los reintentos y rechazos no modificaron ese saldo. El depósito de $50.15 se comprobó en otra cuenta. El cajero conserva $1,000.31 de efectivo, coincidente con el Central.
+**Resultado real:** la sucursal abrió la cuenta `13447350977369660092` con $1,000; el cajero retiró $300 y los tres nodos confirmaron $700. Solo se registró un retiro. Los reintentos y rechazos no modificaron ese saldo. El depósito de $50.15 se comprobó en otra cuenta. El cajero terminó esa validación inicial con $1,000.31 de efectivo, coincidente con el Central.
 
 **Validación:** 39 pruebas del Nodo 3 con PostgreSQL, sin omisiones ni fallos; auditoría de dependencias sin vulnerabilidades; 46 solicitudes Postman y 49 aserciones aprobadas, incluidas 5 después de reiniciar Render. Se conservaron comprobantes, efectivo y sesión técnica. Además, una prueba aislada con el Core real perdió la respuesta tras un depósito de $0.01 y recuperó el comprobante sin duplicar el crédito.
 
@@ -14,4 +14,6 @@ El cajero está publicado en https://node3-atm.onrender.com y conectado al Banco
 
 **Infraestructura:** Render es el destino principal acordado con el profesor. Cada push a `main` despliega el commit que pasó las pruebas mediante un Deploy Hook privado; `autoDeployTrigger: off` deja ese control al workflow. La base gratuita del cajero vence el **8 de noviembre de 2026**, según Render: preparar respaldo o renovación antes si todavía se utilizará.
 
-No quedan bloqueos funcionales en la unión verificada. Para entregar el examen queda preparar la demostración y las evidencias que solicite el profesor.
+No quedan bloqueos funcionales identificados para el examen. La documentación final incluye guion de 10 minutos, OpenAPI, Postman, capturas y respaldo restaurado en una base aislada. Consultar [entrega final](docs/ENTREGA_FINAL.md). La exposición ante el profesor corresponde al equipo.
+
+El nuevo ensayo de cierre volvió a aprobar 46 solicitudes / 49 aserciones y dejó $750.46 de efectivo, sin pendientes. La cuenta original conserva $700; el nuevo ensayo utilizó otra cuenta.

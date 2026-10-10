@@ -2,7 +2,7 @@
 
 **Aceptación real de NODE3 completada:** 46 solicitudes / 49 aserciones Postman, sin fallos, incluido reinicio de Render. Ver [reporte](../ENTREGA_INTEGRACION.md).
 
-**Estado: implementado y desplegado en NODE1**, verificado con el Core `7fc14e3` y NODE2 `fae8349`. URL: `https://banco-central-nodo1.onrender.com/api`.
+**Estado: implementado, desplegado y aceptado con los tres nodos.** La aceptación funcional se registró con Core `bc85af1`, NODE2 `c2b295a` y NODE3 `de7ceef`. URL: `https://banco-central-nodo1.onrender.com/api`.
 
 ## Contrato central disponible
 
@@ -171,13 +171,13 @@ Dentro de una transacción PostgreSQL o procedimiento autorizado:
 
 La reserva local de NODE3 protege su propio inventario; no sustituye estas garantías centrales. Las recargas/correcciones de efectivo desde administración deben coordinarse sin movimientos pendientes del cajero; no sobrescribir inventario mientras se recupera un comprobante anterior.
 
-### Estado actualizado después del pull de NODE1
+### Estado del contrato al cierre
 
 **Ya resuelto:** `nodo_id` en transacciones; `sucursal_id` en cuentas; apertura como `deposito`; escritura de efectivo en `efectivo_disponible` (el nombre `efectivo_asignado` del formulario se traduce correctamente); comparación de nodo/tipo/cuentas/importe al repetir claves; bloqueo central por clave; aritmética decimal exacta e historial filtrado por nodo.
 
-**Pendiente para el contrato ATM:** rutas `nodes/me` y consulta por clave; confirmaciones con estado y saldos originales; resultados de rechazo durables con códigos; actualización atómica de efectivo del cajero; garantía de `created_at` en la primera respuesta.
+**Implementado y verificado:** rutas `nodes/me` y consulta por clave; confirmaciones con estado y saldos originales; rechazos durables con códigos; actualización atómica de efectivo del cajero; `created_at` en la primera respuesta. La aceptación conjunta comprobó un único retiro, saldo compartido, inventario coincidente y persistencia después de reiniciar Render.
 
-No se modificó NODE1 ni NODE2 ni se ejecutaron sus migraciones. No presentar los errores anteriores como pendientes después del pull. El responsable debe confirmar que la versión desplegada corresponde al código revisado.
+La revisión inicial de compatibilidad no modificó NODE1/NODE2. Posteriormente sus responsables integraron el contrato y se validaron los tres servicios publicados; los resultados actuales están en [ENTREGA_INTEGRACION.md](../ENTREGA_INTEGRACION.md).
 
 ## 6. Entrega y aceptación conjunta
 
@@ -187,7 +187,7 @@ Comprobar: consulta 1000.00, retiro 300.00, saldo 700.00, efectivo reducido en 3
 
 El simulador incluido prueba NODE3 con el contrato acordado. No demuestra que NODE1 ni Supabase lo cumplan. La aceptación del cajero se registra en el reporte de integración y la colección Postman; las pruebas del simulador se mantienen separadas de las pruebas reales.
 
-## 7. Evidencia de revisión de compatibilidad
+## 7. Evidencia histórica de revisión de compatibilidad
 
 Revisión local del 9 de octubre de 2026, sobre las versiones indicadas al inicio:
 
@@ -196,4 +196,4 @@ Revisión local del 9 de octubre de 2026, sobre las versiones indicadas al inici
 - Tres controles negativos reprodujeron las incompatibilidades que esta guía prohíbe: validación UUID global rechaza una apertura válida; `error` como objeto produce `[object Object]`; envolver nuevamente el historial rompe conexión y consulta de movimientos.
 - No se modificaron archivos de NODE1/NODE2, ni se utilizaron API Keys reales, Render o Supabase. La copia y los instrumentos de prueba son temporales; no forman parte de sus repositorios.
 
-Esta evidencia verifica el comportamiento del consumidor NODE2 frente a esos formatos. No prueba la implementación futura de NODE1, su actualización de efectivo o sus nuevos registros de recuperación. Antes de desplegar el Core ampliado, ejecutar la aceptación conjunta de esta guía y la regresión original de NODE2 contra un entorno autorizado de integración.
+Esta revisión aislada verificó el consumidor NODE2 frente a esos formatos. La implementación del Core y la aplicación ATM se comprobaron después con la aceptación conjunta real; sus resultados se conservan por separado para no atribuir a la simulación garantías que no probó.

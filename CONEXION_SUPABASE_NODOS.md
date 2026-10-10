@@ -55,4 +55,8 @@ Se aprobaron 43 pruebas PostgreSQL del Core, 36 de Nodo 2 y 54 solicitudes Postm
 
 ## Unión real de los tres servicios
 
-Cajero publicado: https://node3-atm.onrender.com. Se verificó apertura $1,000 en la sucursal, retiro $300 desde el cajero y saldo $700 en los tres nodos, sin duplicación. Se aprobaron 46 solicitudes y 49 aserciones Postman, incluyendo persistencia de recibos, efectivo y sesión después de reiniciar el cajero. El inventario actual es $1,000.31; las sincronizaciones se coordinan sin pendientes. Las rutas públicas de NODE3 son `/api/atm`, `/api/accounts/{numero}/saldo`, `/api/retiros`, `/api/depositos` y `/api/operaciones/{id}`. Los movimientos reciben `Idempotency-Key` UUID y `monto` decimal como texto.
+Cajero publicado: https://node3-atm.onrender.com. Se verificó apertura $1,000 en la sucursal, retiro $300 desde el cajero y saldo $700 en los tres nodos, sin duplicación. Se aprobaron 46 solicitudes y 49 aserciones Postman, incluyendo persistencia de recibos, efectivo y sesión después de reiniciar el cajero. El inventario registrado después del ensayo de cierre es $750.46; las sincronizaciones se coordinan sin pendientes. Las rutas públicas de NODE3 son `/api/atm`, `/api/accounts/{numero}/saldo`, `/api/retiros`, `/api/depositos` y `/api/operaciones/{id}`. Los movimientos reciben `Idempotency-Key` UUID y `monto` decimal como texto.
+
+## Entrega y continuidad
+
+La documentación final incluye guion de 10 minutos, OpenAPI, Postman y evidencias. El respaldo del cajero se restauró en PostgreSQL aislado y se verificaron datos, configuración y descifrado de API Key. La base gratuita vence el 8 de noviembre de 2026; consultar la guía de respaldo de la entrega.

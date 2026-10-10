@@ -208,3 +208,7 @@ No se presenta la prueba contra el simulador como integración real con Supabase
 Importar [colección de los tres nodos](postman/tres_nodos_render.postman_collection.json) y [entorno Render sin secretos](postman/tres_nodos_render.postman_environment.json). Completar en un entorno privado las dos API Keys y las credenciales del técnico. Activar `permitir_operaciones=true` para la demostración autorizada.
 
 Las carpetas 00–03 crean una cuenta nueva de $1,000, retiran $300 desde NODE3 y mantienen su saldo en $700. El depósito de $50.15 usa otra cuenta, sin alterar la cuenta de la demostración. El inventario local se verifica mediante la sesión técnica; no se expone al cliente público. La carpeta 04 reutiliza los identificadores después de reiniciar Render y no crea movimientos.
+
+## Entrega final del equipo
+
+Consultar [entrega final](docs/ENTREGA_FINAL.md), [guion de 10 minutos](docs/GUION_DEMOSTRACION.md), [resumen del proyecto](docs/RESUMEN_EQUIPO.md) y [respaldo del cajero](docs/RESPALDO_NODO3.md). Se volvió a ensayar el flujo completo en Render con 46 solicitudes / 49 aserciones, sin fallos. El respaldo privado se restauró y verificó en PostgreSQL aislado. La exposición corresponde al equipo.

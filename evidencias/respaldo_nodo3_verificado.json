@@ -1,0 +1,18 @@
+{
+  "verified_at_utc": "2026-10-10T01:52:46.276081+00:00",
+  "source": "Render node3-atm-db / public schema",
+  "format": "PostgreSQL 17 custom",
+  "sha256": "bffca85be6499236cc107fd8f0a1c3f7e19cf82f7eb9823388b605d4a6840036",
+  "bytes": 9277,
+  "restored_into_isolated_postgresql": true,
+  "production_writes": false,
+  "settings_and_operations_hashes_match": true,
+  "api_key_decryption_verified": true,
+  "cash": "750.46",
+  "pending_operations": 0,
+  "operations": 10,
+  "sessions": 4,
+  "private_backup_root": "/home/omarbolanos/.local/share/examen-topweb/respaldos/",
+  "free_database_expiry": "2026-11-08",
+  "external_access_restored_to_blocked": true
+}
