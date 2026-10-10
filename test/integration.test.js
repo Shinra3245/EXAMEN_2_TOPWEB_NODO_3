@@ -250,6 +250,7 @@ describe('NODE3 con PostgreSQL real y Banco Central simulado', { skip: !process.
     const home = await request(app).get('/').expect(200);
     assert.ok(home.text.includes('Tu cajero automático'));
     assert.ok(home.headers['content-security-policy']);
+    assert.equal(home.headers['referrer-policy'], 'same-origin');
     assert.equal(home.headers['x-powered-by'], undefined);
     await request(app).get('/health').expect(200);
     await request(app).get('/assets/atm.js').expect(200);

@@ -14,7 +14,9 @@ export function createApp({ config, pool, service }) {
   if (config.production) app.set('trust proxy', 1);
   app.set('view engine', 'ejs');
   app.set('views', fileURLToPath(new URL('../views', import.meta.url)));
-  app.use(helmet({ strictTransportSecurity: config.production ? undefined : false, contentSecurityPolicy: {
+  // no-referrer makes Chrome send Origin: null on native form POSTs. Keep
+  // same-origin navigation metadata so the strict origin and CSRF checks work.
+  app.use(helmet({ referrerPolicy: { policy: 'same-origin' }, strictTransportSecurity: config.production ? undefined : false, contentSecurityPolicy: {
     directives: { 'script-src': ["'self'"], 'style-src': ["'self'"], 'form-action': ["'self'"], 'upgrade-insecure-requests': config.production ? [] : null },
   } }));
   app.use('/assets', express.static(fileURLToPath(new URL('../public', import.meta.url)), { dotfiles: 'deny', maxAge: '1h' }));
