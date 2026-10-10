@@ -101,6 +101,7 @@ Para detener la base conservando el volumen: `docker compose --env-file .env.int
 | --- | --- |
 | `DATABASE_URL` | Base PostgreSQL exclusiva de NODE3 |
 | `BANCO_CENTRAL_URL` | Origen o URL base de NODE1; se normaliza a un solo `/api`; HTTPS en producción |
+| `APP_URL` | Origen público propio opcional; en Render se usa automáticamente `RENDER_EXTERNAL_URL` para validar formularios detrás del proxy |
 | `BANCO_CENTRAL_API_KEY` | Configuración inicial opcional; no sustituye la clave guardada en cada reinicio |
 | `ADMIN_USERNAME` | Usuario técnico; por defecto `tecnico` |
 | `ADMIN_PASSWORD_HASH` | Hash `scrypt` de la contraseña administrativa |

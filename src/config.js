@@ -9,6 +9,15 @@ export function loadConfig(env = process.env) {
   const url = new URL(normalizeCentralUrl(env.BANCO_CENTRAL_URL));
   const production = env.NODE_ENV === 'production';
   if (production && url.protocol !== 'https:') throw new Error('El Banco Central debe utilizar HTTPS en producción.');
+  let publicOrigin;
+  if (env.APP_URL || env.RENDER_EXTERNAL_URL) {
+    const publicUrl = new URL(env.APP_URL || env.RENDER_EXTERNAL_URL);
+    if (publicUrl.username || publicUrl.password || publicUrl.search || publicUrl.hash || publicUrl.pathname !== '/' ||
+        !['http:', 'https:'].includes(publicUrl.protocol) || (production && publicUrl.protocol !== 'https:')) {
+      throw new Error('APP_URL debe ser el origen público de la aplicación; HTTPS en producción.');
+    }
+    publicOrigin = publicUrl.origin;
+  }
   const port = Number(env.PORT || 3003);
   const timeoutMs = Number(env.CENTRAL_TIMEOUT_MS || 10000);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PORT inválido.');
@@ -21,6 +30,6 @@ export function loadConfig(env = process.env) {
     sessionSecret: env.SESSION_SECRET,
     adminUsername: env.ADMIN_USERNAME || 'tecnico',
     adminPasswordHash: env.ADMIN_PASSWORD_HASH,
-    port, timeoutMs, production,
+    port, timeoutMs, production, publicOrigin,
   };
 }

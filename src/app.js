@@ -32,7 +32,10 @@ export function createApp({ config, pool, service }) {
     res.set('Cache-Control', 'no-store');
     res.locals.admin = req.session.admin || null;
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && req.headers.origin) {
-      invariant(req.headers.origin === `${req.protocol}://${req.get('host')}`, 'INVALID_ORIGIN', 'Origen de solicitud no permitido.', 403);
+      // Render's proxy can use an internal Host or append the default TLS port.
+      // Prefer the configured public origin; never derive it from caller-controlled forwarding headers.
+      const expectedOrigin = config.publicOrigin || new URL(`${req.protocol}://${req.get('host')}`).origin;
+      invariant(req.headers.origin === expectedOrigin, 'INVALID_ORIGIN', 'Origen de solicitud no permitido.', 403);
     }
     next();
   });

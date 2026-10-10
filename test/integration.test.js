@@ -260,4 +260,18 @@ describe('NODE3 con PostgreSQL real y Banco Central simulado', { skip: !process.
     await request(app).post('/api/retiros').set('Origin', 'https://untrusted.example').set('Idempotency-Key', randomUUID()).send(body()).expect(403);
     await request(app).get('/.env').expect(404);
   });
+
+  test('el origen público funciona detrás del proxy de Render y rechaza orígenes y hosts suplantados', async () => {
+    const behindProxy = createApp({ config: { ...config, production: true, publicOrigin: 'https://node3-atm.onrender.com' }, pool, service });
+    const send = origin => request(behindProxy).post('/api/retiros')
+      .set('Host', 'internal-render-host:10000').set('X-Forwarded-Proto', 'https')
+      .set('X-Forwarded-Host', 'untrusted.example').set('Origin', origin)
+      .set('Idempotency-Key', randomUUID()).send(body('0'));
+    const valid = await send('https://node3-atm.onrender.com').expect(422);
+    assert.equal(valid.body.error.code, 'INVALID_AMOUNT');
+    const invalid = await send('https://untrusted.example').expect(403);
+    assert.equal(invalid.body.error.code, 'INVALID_ORIGIN');
+    const login = await request(behindProxy).get('/admin/login').set('X-Forwarded-Proto', 'https').expect(200);
+    assert.ok(login.headers['set-cookie'][0].includes('Secure'));
+  });
 });

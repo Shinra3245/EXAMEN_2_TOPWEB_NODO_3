@@ -43,6 +43,9 @@ test('producción exige HTTPS y secretos completos; desarrollo permite el simula
   assert.throws(() => loadConfig({ ...env, CONFIG_ENCRYPTION_KEY: 'short' }));
   assert.throws(() => loadConfig({ ...env, BANCO_CENTRAL_URL: 'https://user:secret@example.com/api' }));
   assert.throws(() => loadConfig({ ...env, CENTRAL_TIMEOUT_MS: '0' }));
+  assert.equal(loadConfig({ ...env, RENDER_EXTERNAL_URL: 'https://node3-atm.onrender.com' }).publicOrigin, 'https://node3-atm.onrender.com');
+  assert.throws(() => loadConfig({ ...env, APP_URL: 'https://user:secret@example.com' }));
+  assert.throws(() => loadConfig({ ...env, NODE_ENV: 'production', BANCO_CENTRAL_URL: 'https://central.example', APP_URL: 'http://atm.example' }));
 });
 
 test('normaliza la URL del Banco Central con un solo sufijo /api', async () => {
