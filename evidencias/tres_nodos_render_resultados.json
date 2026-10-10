@@ -1,0 +1,462 @@
+{
+  "date_local": "2026-10-09",
+  "services": {
+    "central": "https://banco-central-nodo1.onrender.com",
+    "branch": "https://sucursal-nodo2.onrender.com",
+    "atm": "https://node3-atm.onrender.com"
+  },
+  "atm_commit": "f1ebbd0cafe264e775316ebcdf401710abc7ffd6",
+  "stats": {
+    "requests": 41,
+    "assertions": 44,
+    "failures": 0
+  },
+  "account": "13447350977369660092",
+  "deposit_account": "02247588756193087448",
+  "withdraw_operation": "7b93a2f8-e079-4fd7-81ea-37501a9a6bab",
+  "withdraw_receipt": {
+    "tipo": "retiro",
+    "monto": "300.00",
+    "created_at": "2026-10-10T01:19:46.028387Z",
+    "saldo_global": "700.00",
+    "numero_cuenta": "13447350977369660092",
+    "transaction_id": "01a12365-0798-73fa-a435-779ecb915ae5",
+    "efectivo_disponible": "950.16"
+  },
+  "deposit_receipt": {
+    "tipo": "deposito",
+    "monto": "50.15",
+    "created_at": "2026-10-10T01:19:53.923458Z",
+    "saldo_global": "50.15",
+    "numero_cuenta": "02247588756193087448",
+    "transaction_id": "01a12365-2692-7252-a9b7-6b293afbd6f1",
+    "efectivo_disponible": "1000.31"
+  },
+  "cash_initial": 1250.16,
+  "cash_final": 1000.31,
+  "main_account_balance": 700,
+  "executions": [
+    {
+      "request": "00.01 Salud central y claves nuevas",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Central HTTP 200",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "00.02 Sucursal real conectada",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Sucursal conectada sin simulador",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "00.03 Cajero y PostgreSQL disponibles",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Cajero HTTP 200",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "00.04 Cajero configurado sin pendientes",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Cajero disponible",
+          "passed": true
+        },
+        {
+          "name": "Sin API Key ni inventario público",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "00.05 Identidad y efectivo central inicial",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Identidad ATM activa",
+          "passed": true
+        },
+        {
+          "name": "Efectivo suficiente para la demostración",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "00.06 API central sin clave",
+      "http": 401,
+      "assertions": [
+        {
+          "name": "Sin clave HTTP 401",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "00.07 API central con clave falsa",
+      "http": 401,
+      "assertions": [
+        {
+          "name": "Clave falsa HTTP 401",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "00.08 Formulario técnico y CSRF",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Formulario protegido disponible",
+          "passed": true
+        },
+        {
+          "name": "Token CSRF presente",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "00.09 Iniciar sesión del técnico",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Acceso técnico correcto",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "00.10 Inventario local inicial coincide con central",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Efectivo local y central coinciden sin reservas",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.01 Sucursal abre cuenta nueva con 1000",
+      "http": 201,
+      "assertions": [
+        {
+          "name": "Apertura 201 con saldo 1000",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.02 Cajero consulta saldo inicial",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Cajero consulta la cuenta de la sucursal",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.03 Cajero retira 300",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Retiro aprobado una sola vez",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.04 Reintento idéntico del retiro",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Mismo ID y comprobante sin segundo débito",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.05 Clave repetida con otro importe",
+      "http": 409,
+      "assertions": [
+        {
+          "name": "Conflicto 409",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.06 Recuperar comprobante local",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Comprobante original persistido",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.07 Central confirma 700",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Saldo global 700",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.08 Sucursal confirma 700",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Saldo global 700",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.09 Cajero confirma 700",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Saldo global 700",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.10 Efectivo local disminuye solo 300",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Inventario local confirmado sin segunda salida",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.11 Historial ATM contiene solo su retiro",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Un retiro único del cajero",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.12 Historial sucursal conserva solo apertura",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Apertura aislada del retiro del cajero",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.13 Reporte de la sucursal",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Reporte local solo apertura 1000",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "01.14 Reintentar apertura después del retiro",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Misma cuenta y saldo actual 700 sin nueva apertura",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "02.01 Fondos insuficientes",
+      "http": 422,
+      "assertions": [
+        {
+          "name": "Rechazo definitivo sin débito",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "02.02 Consultar rechazo persistido",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Mismo rechazo persistido",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "02.03 Cuenta inexistente",
+      "http": 422,
+      "assertions": [
+        {
+          "name": "Cuenta inexistente rechazada",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "02.04 Efectivo local insuficiente",
+      "http": 422,
+      "assertions": [
+        {
+          "name": "Rechazo local sin contacto financiero central",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "02.05 Central no recibió el retiro sin efectivo",
+      "http": 404,
+      "assertions": [
+        {
+          "name": "Sin operación central para rechazo local",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "02.06 Importes inválidos",
+      "http": 422,
+      "assertions": [
+        {
+          "name": "Importe inválido 422 antes de crear operación",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "02.07 Falta idempotencia",
+      "http": 422,
+      "assertions": [
+        {
+          "name": "Sin clave 422",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "02.08 Saldo e inventario después de rechazos",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Rechazos no alteran efectivo ni mantienen reserva",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "02.09 Cuenta principal mantiene 700",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Cuenta sin alteración por rechazos",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "03.01 Apertura de cuenta sin saldo",
+      "http": 201,
+      "assertions": [
+        {
+          "name": "Cuenta nueva con cero",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "03.02 Depósito de 50.15",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Depósito exacto aprobado",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "03.03 Reintento depósito sin doble crédito",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Mismo comprobante de depósito",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "03.04 Retiro conserva comprobante tras depósito posterior",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Comprobante de retiro conserva saldo y efectivo originales",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "03.05 Sucursal consulta depósito 50.15",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Sucursal ve depósito del cajero",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "03.06 Sin depósito ficticio de apertura cero",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Sucursal no registra depósito con monto cero",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "03.07 Inventario local final",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Efectivo local coincide con retiros y depósitos únicos",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "request": "03.08 Inventario central final",
+      "http": 200,
+      "assertions": [
+        {
+          "name": "Inventario central coincide con el local",
+          "passed": true
+        }
+      ]
+    }
+  ]
+}

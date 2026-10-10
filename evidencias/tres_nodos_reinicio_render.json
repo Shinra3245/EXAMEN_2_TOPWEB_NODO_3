@@ -1,0 +1,36 @@
+{
+  "action": "Restart service from authenticated Render dashboard",
+  "action_confirmed": true,
+  "service_id": "srv-db4p20g473hc738juih0",
+  "commit": "f1ebbd0cafe264e775316ebcdf401710abc7ffd6",
+  "requests": 5,
+  "assertions": 5,
+  "failures": 0,
+  "checks": [
+    {
+      "name": "04.01 Salud de cajero reiniciado",
+      "http": 200,
+      "passed": true
+    },
+    {
+      "name": "04.02 Comprobante de retiro persistente",
+      "http": 200,
+      "passed": true
+    },
+    {
+      "name": "04.03 Comprobante de depósito persistente",
+      "http": 200,
+      "passed": true
+    },
+    {
+      "name": "04.04 Saldo principal conserva 700",
+      "http": 200,
+      "passed": true
+    },
+    {
+      "name": "04.05 Sesión e inventario sobreviven al reinicio",
+      "http": 200,
+      "passed": true
+    }
+  ]
+}

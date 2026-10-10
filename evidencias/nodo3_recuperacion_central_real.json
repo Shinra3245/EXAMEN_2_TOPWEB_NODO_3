@@ -1,0 +1,22 @@
+{
+  "kind": "Real NODE1 and NODE2 Render, NODE3 isolated local PostgreSQL with controlled response loss",
+  "account": "18308174088592010195",
+  "operation_id": "a4c37400-78ec-4f51-b079-2d678b52b59a",
+  "idempotency_key": "af8aaa79-b5dc-4d61-b848-7682b7223157",
+  "status": "succeeded",
+  "receipt": {
+    "tipo": "deposito",
+    "monto": "0.01",
+    "created_at": "2026-10-10T01:12:56.056365Z",
+    "saldo_global": "0.01",
+    "numero_cuenta": "18308174088592010195",
+    "transaction_id": "01a1235e-c70f-709c-a583-51337ced12ee",
+    "efectivo_disponible": "1250.16"
+  },
+  "cash_before": "1250.15",
+  "cash_after": "1250.16",
+  "ledger_transactions": 1,
+  "duplicate_did_not_credit_again": true,
+  "local_pending_cleared": true,
+  "restarted_service_recovered": true
+}

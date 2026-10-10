@@ -1,5 +1,7 @@
 # Contrato de integración NODE1 ↔ NODE3
 
+**Aceptación real de NODE3 completada:** 46 solicitudes / 49 aserciones Postman, sin fallos, incluido reinicio de Render. Ver [reporte](../ENTREGA_INTEGRACION.md).
+
 **Estado: implementado y desplegado en NODE1**, verificado con el Core `7fc14e3` y NODE2 `fae8349`. URL: `https://banco-central-nodo1.onrender.com/api`.
 
 ## Contrato central disponible

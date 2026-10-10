@@ -6,6 +6,8 @@ Los clientes ingresan solo un número de cuenta: **es una simulación, no autent
 
 ## Estado de integración
 
+**Unión real completada:** cuenta creada en NODE2 con $1,000, retiro de $300 desde NODE3 y saldo $700 en los tres servicios. 39 pruebas del cajero y 46 solicitudes Postman / 49 aserciones aprobadas, incluido reinicio real de Render. [Reporte para el encargado](ENTREGA_INTEGRACION.md).
+
 - Adaptador actualizado al formato Laravel revisado: cuenta sin `data`, clave de idempotencia en JSON y transacciones en la raíz (201/200).
 - Banco Central simulado disponible para desarrollar sin depender del trabajo de otros integrantes.
 - La integración con NODE1 requiere URL, API Key propia y el contrato descrito en [docs/central-contract.md](docs/central-contract.md). Las rutas de identidad, recuperación, efectivo e idempotencia ya están implementadas y desplegadas en NODE1.

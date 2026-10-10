@@ -1,0 +1,15 @@
+{
+  "framework": "node:test",
+  "database": "PostgreSQL 17 isolated local database",
+  "tests": 39,
+  "passed": 39,
+  "failed": 0,
+  "skipped": 0,
+  "production_dependency_audit_vulnerabilities": 0,
+  "new_regressions": [
+    "API key rotation recovers a pending debit without releasing cash",
+    "Public origin behind Render proxy and rejection of forged origins",
+    "Secure session cookie through HTTPS proxy",
+    "Same-origin referrer policy preserves browser native form origin"
+  ]
+}
