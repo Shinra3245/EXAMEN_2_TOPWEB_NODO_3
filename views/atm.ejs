@@ -1,7 +1,7 @@
 <%- include('partials/header', { title: 'Cajero automático' }) %>
 <section class="page-heading">
   <p class="eyebrow">BIENVENIDO</p>
-  <h1>Tu cajero automático</h1>
+  <h1>Cajera automatico</h1>
   <p>Consulta tu saldo, retira efectivo o realiza un depósito.</p>
   <span class="status <%= status.available ? 'status-ok' : 'status-warn' %>" id="atm-status"><%= !status.configured ? 'Pendiente de configuración' : status.available ? 'Cajero disponible' : 'Confirmando una operación' %></span>
 </section>

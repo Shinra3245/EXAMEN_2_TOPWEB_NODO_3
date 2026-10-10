@@ -248,7 +248,7 @@ describe('NODE3 con PostgreSQL real y Banco Central simulado', { skip: !process.
   });
   test('cabeceras, origen, pantallas y health se entregan sin revelar configuración privada', async () => {
     const home = await request(app).get('/').expect(200);
-    assert.ok(home.text.includes('Tu cajero automático'));
+    assert.ok(home.text.includes('Cajera automatico'));
     assert.ok(home.headers['content-security-policy']);
     assert.equal(home.headers['referrer-policy'], 'same-origin');
     assert.equal(home.headers['x-powered-by'], undefined);
