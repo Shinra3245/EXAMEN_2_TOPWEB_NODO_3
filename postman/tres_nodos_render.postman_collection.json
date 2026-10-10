@@ -1,0 +1,1659 @@
+{
+  "info": {
+    "name": "Examen - tres nodos reales en Render",
+    "_postman_id": "5cbbc9d4-f599-49f2-b34c-0cd5d5e8699b",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Flujo real NODE2 -> NODE3 -> NODE1. Cuenta nueva 1000, retiro 300, saldo 700; reintentos, aislamiento y efectivo local protegido. Requiere credenciales privadas y permitir_operaciones=true. Nunca asigna efectivo ni cambia claves."
+  },
+  "item": [
+    {
+      "name": "00 - Salud, identidad y acceso administrativo",
+      "item": [
+        {
+          "name": "00.01 Salud central y claves nuevas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{central_url}}/up"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "['run_id','opening_key','withdraw_key','funds_key','missing_key','local_cash_key','zero_key','deposit_key'].forEach(k=>pm.environment.set(k,pm.variables.replaceIn('{{$guid}}')));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Central HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "00.02 Sucursal real conectada",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{sucursal_url}}/api/estado"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Sucursal conectada sin simulador',()=>{pm.response.to.have.status(200);pm.expect(j.conectado).eq(true);pm.expect(j.modo_prueba).eq(false);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "00.03 Cajero y PostgreSQL disponibles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Cajero HTTP 200',()=>{pm.response.to.have.status(200);pm.expect(j.status).eq('ok');pm.expect(j.service).eq('node3-atm');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "00.04 Cajero configurado sin pendientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/atm"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Cajero disponible',()=>{pm.response.to.have.status(200);pm.expect(j.data.configured).eq(true);pm.expect(j.data.available).eq(true);});check('Sin API Key ni inventario público',()=>{pm.expect(j.data).not.to.have.property('efectivo_disponible');pm.expect(JSON.stringify(j)).not.to.include(env('cajero_api_key'));});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "00.05 Identidad y efectivo central inicial",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-KEY",
+                "value": "{{cajero_api_key}}"
+              }
+            ],
+            "url": "{{central_url}}/api/nodes/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Identidad ATM activa',()=>{pm.response.to.have.status(200);pm.expect(j.data.tipo).eq('cajero');pm.expect(j.data.activo).eq(true);});pm.environment.set('cajero_id',j.data.id);pm.environment.set('cash_initial',String(cents(j.data.efectivo_disponible)));check('Efectivo suficiente para la demostración',()=>pm.expect(cents(j.data.efectivo_disponible)).above(100000));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "00.06 API central sin clave",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{central_url}}/api/nodes/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Sin clave HTTP 401',()=>pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "00.07 API central con clave falsa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-KEY",
+                "value": "invalid-test-key"
+              }
+            ],
+            "url": "{{central_url}}/api/nodes/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Clave falsa HTTP 401',()=>pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "00.08 Formulario técnico y CSRF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/admin/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Formulario protegido disponible',()=>pm.response.to.have.status(200)); const token=pm.response.text().match(/name=\"_csrf\" value=\"([a-f0-9]+)\"/);check('Token CSRF presente',()=>pm.expect(token).not.eq(null)); if(token)pm.environment.set('admin_csrf',token[1]);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "00.09 Iniciar sesión del técnico",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/html"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": "{{cajero_url}}/admin/login",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{admin_username}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "_csrf",
+                  "value": "{{admin_csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Acceso técnico correcto',()=>{pm.response.to.have.status(200);pm.expect(pm.response.text()).include('Estado operativo');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "00.10 Inventario local inicial coincide con central",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/admin"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Efectivo local y central coinciden sin reservas',()=>{pm.response.to.have.status(200);pm.expect(cash('cash-confirmed')).eq(Number(env('cash_initial')));pm.expect(cash('cash-available')).eq(Number(env('cash_initial')));});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 - Flujo conjunto 1000 -> retiro 300 -> saldo 700",
+      "item": [
+        {
+          "name": "01.01 Sucursal abre cuenta nueva con 1000",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{sucursal_url}}/api/cuentas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"titular\": \"Integración tres nodos {{run_id}}\", \"saldo_inicial\": 1000, \"idempotency_key\": \"{{opening_key}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Apertura 201 con saldo 1000',()=>{pm.response.to.have.status(201);pm.expect(cents(j.saldo)).eq(100000);});pm.environment.set('numero_cuenta',j.numero_cuenta);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.02 Cajero consulta saldo inicial",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/accounts/{{numero_cuenta}}/saldo"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Cajero consulta la cuenta de la sucursal',()=>{pm.response.to.have.status(200);pm.expect(j.data.numero_cuenta).eq(env('numero_cuenta'));pm.expect(j.data.saldo_global).eq('1000.00');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.03 Cajero retira 300",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{withdraw_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/retiros",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"numero_cuenta\": \"{{numero_cuenta}}\", \"monto\": \"300.00\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Retiro aprobado una sola vez',()=>{pm.response.to.have.status(200);pm.expect(j.data.status).eq('succeeded');pm.expect(j.data.receipt.saldo_global).eq('700.00');pm.expect(cents(j.data.receipt.efectivo_disponible)).eq(Number(env('cash_initial'))-30000);});pm.environment.set('operation_id',j.data.id);pm.environment.set('withdraw_receipt',JSON.stringify(j.data.receipt));pm.environment.set('transaction_id',j.data.receipt.transaction_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.04 Reintento idéntico del retiro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{withdraw_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/retiros",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"numero_cuenta\": \"{{numero_cuenta}}\", \"monto\": \"300.00\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Mismo ID y comprobante sin segundo débito',()=>{pm.response.to.have.status(200);pm.expect(j.data.id).eq(env('operation_id'));pm.expect(j.data.receipt).deep.eq(JSON.parse(env('withdraw_receipt')));});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.05 Clave repetida con otro importe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{withdraw_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/retiros",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"numero_cuenta\": \"{{numero_cuenta}}\", \"monto\": \"301.00\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Conflicto 409',()=>{pm.response.to.have.status(409);pm.expect(j.error.code).eq('IDEMPOTENCY_CONFLICT');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.06 Recuperar comprobante local",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/operaciones/{{operation_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Comprobante original persistido',()=>{pm.response.to.have.status(200);pm.expect(j.data.receipt).deep.eq(JSON.parse(env('withdraw_receipt')));});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.07 Central confirma 700",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-KEY",
+                "value": "{{cajero_api_key}}"
+              }
+            ],
+            "url": "{{central_url}}/api/accounts/{{numero_cuenta}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Saldo global 700',()=>{pm.response.to.have.status(200);pm.expect(cents(j.saldo_global)).eq(70000);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.08 Sucursal confirma 700",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{sucursal_url}}/api/cuentas/{{numero_cuenta}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Saldo global 700',()=>{pm.response.to.have.status(200);pm.expect(cents(j.saldo)).eq(70000);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.09 Cajero confirma 700",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/accounts/{{numero_cuenta}}/saldo"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Saldo global 700',()=>{pm.response.to.have.status(200);pm.expect(cents(j.data.saldo_global)).eq(70000);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.10 Efectivo local disminuye solo 300",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/admin"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Inventario local confirmado sin segunda salida',()=>{pm.response.to.have.status(200);pm.expect(cash('cash-confirmed')).eq(Number(env('cash_initial'))-30000);pm.expect(cash('cash-available')).eq(Number(env('cash_initial'))-30000);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.11 Historial ATM contiene solo su retiro",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-KEY",
+                "value": "{{cajero_api_key}}"
+              }
+            ],
+            "url": "{{central_url}}/api/transactions?cuenta={{numero_cuenta}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Un retiro único del cajero',()=>{pm.response.to.have.status(200);pm.expect(j.total).eq(1);pm.expect(j.data[0].nodo_id).eq(env('cajero_id'));pm.expect(j.data[0].id).eq(env('transaction_id'));pm.expect(j.data[0].tipo).eq('retiro');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.12 Historial sucursal conserva solo apertura",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-KEY",
+                "value": "{{sucursal_api_key}}"
+              }
+            ],
+            "url": "{{central_url}}/api/transactions?cuenta={{numero_cuenta}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Apertura aislada del retiro del cajero',()=>{pm.response.to.have.status(200);pm.expect(j.total).eq(1);pm.expect(j.data[0].tipo).eq('deposito');pm.expect(cents(j.data[0].monto)).eq(100000);pm.expect(j.data[0].nodo_id).not.eq(env('cajero_id'));});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.13 Reporte de la sucursal",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{sucursal_url}}/api/reportes?cuenta={{numero_cuenta}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Reporte local solo apertura 1000',()=>{pm.response.to.have.status(200);pm.expect(j.operaciones).eq(1);pm.expect(cents(j.monto_total)).eq(100000);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.14 Reintentar apertura después del retiro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{sucursal_url}}/api/cuentas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"titular\": \"Integración tres nodos {{run_id}}\", \"saldo_inicial\": 1000, \"idempotency_key\": \"{{opening_key}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Misma cuenta y saldo actual 700 sin nueva apertura',()=>{pm.response.to.have.status(200);pm.expect(j.numero_cuenta).eq(env('numero_cuenta'));pm.expect(j.reintentada).eq(true);pm.expect(cents(j.saldo)).eq(70000);});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Rechazos y reserva sin cambios financieros",
+      "item": [
+        {
+          "name": "02.01 Fondos insuficientes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{funds_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/retiros",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"numero_cuenta\": \"{{numero_cuenta}}\", \"monto\": \"700.01\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Rechazo definitivo sin débito',()=>{pm.response.to.have.status(422);pm.expect(j.data.status).eq('rejected');pm.expect(j.data.error.code).eq('INSUFFICIENT_FUNDS');});pm.environment.set('funds_operation_id',j.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.02 Consultar rechazo persistido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/operaciones/{{funds_operation_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Mismo rechazo persistido',()=>{pm.response.to.have.status(200);pm.expect(j.data.status).eq('rejected');pm.expect(j.data.error.code).eq('INSUFFICIENT_FUNDS');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.03 Cuenta inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{missing_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/retiros",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"numero_cuenta\": \"missing-{{run_id}}\", \"monto\": \"0.01\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Cuenta inexistente rechazada',()=>{pm.response.to.have.status(422);pm.expect(j.data.error.code).eq('ACCOUNT_NOT_FOUND');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.04 Efectivo local insuficiente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{local_cash_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/retiros",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"numero_cuenta\": \"{{numero_cuenta}}\", \"monto\": \"{{too_much_cash}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('too_much_cash',((Number(pm.environment.get('cash_initial'))-30000+1)/100).toFixed(2));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Rechazo local sin contacto financiero central',()=>{pm.response.to.have.status(422);pm.expect(j.data.error.code).eq('LOCAL_INSUFFICIENT_CASH');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.05 Central no recibió el retiro sin efectivo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-KEY",
+                "value": "{{cajero_api_key}}"
+              }
+            ],
+            "url": "{{central_url}}/api/transactions/by-idempotency-key/{{local_cash_key}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Sin operación central para rechazo local',()=>{pm.response.to.have.status(404);pm.expect(j.error.code).eq('OPERATION_NOT_FOUND');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.06 Importes inválidos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/retiros",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"numero_cuenta\": \"{{numero_cuenta}}\", \"monto\": \"1.001\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Importe inválido 422 antes de crear operación',()=>{pm.response.to.have.status(422);pm.expect(j.error.code).eq('INVALID_AMOUNT');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.07 Falta idempotencia",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/retiros",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"numero_cuenta\": \"{{numero_cuenta}}\", \"monto\": \"300.00\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Sin clave 422',()=>{pm.response.to.have.status(422);pm.expect(j.error.code).eq('INVALID_IDEMPOTENCY_KEY');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.08 Saldo e inventario después de rechazos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/admin"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Rechazos no alteran efectivo ni mantienen reserva',()=>{pm.response.to.have.status(200);pm.expect(cash('cash-confirmed')).eq(Number(env('cash_initial'))-30000);pm.expect(cash('cash-available')).eq(Number(env('cash_initial'))-30000);pm.expect(pm.response.text()).not.include('id=\"pending-title\"');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.09 Cuenta principal mantiene 700",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/accounts/{{numero_cuenta}}/saldo"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Cuenta sin alteración por rechazos',()=>{pm.response.to.have.status(200);pm.expect(j.data.saldo_global).eq('700.00');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Depósito exacto en otra cuenta y comprobante original",
+      "item": [
+        {
+          "name": "03.01 Apertura de cuenta sin saldo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{sucursal_url}}/api/cuentas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"titular\": \"Depósito tres nodos {{run_id}}\", \"saldo_inicial\": 0, \"idempotency_key\": \"{{zero_key}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Cuenta nueva con cero',()=>{pm.response.to.have.status(201);pm.expect(cents(j.saldo)).eq(0);});pm.environment.set('deposit_account',j.numero_cuenta);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.02 Depósito de 50.15",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{deposit_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/depositos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"numero_cuenta\": \"{{deposit_account}}\", \"monto\": \"50.15\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Depósito exacto aprobado',()=>{pm.response.to.have.status(200);pm.expect(j.data.status).eq('succeeded');pm.expect(j.data.receipt.saldo_global).eq('50.15');pm.expect(cents(j.data.receipt.efectivo_disponible)).eq(Number(env('cash_initial'))-24985);});pm.environment.set('deposit_receipt',JSON.stringify(j.data.receipt));pm.environment.set('deposit_operation_id',j.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.03 Reintento depósito sin doble crédito",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{deposit_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/depositos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"numero_cuenta\": \"{{deposit_account}}\", \"monto\": \"50.15\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Mismo comprobante de depósito',()=>{pm.response.to.have.status(200);pm.expect(j.data.receipt).deep.eq(JSON.parse(env('deposit_receipt')));});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.04 Retiro conserva comprobante tras depósito posterior",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/operaciones/{{operation_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Comprobante de retiro conserva saldo y efectivo originales',()=>{pm.response.to.have.status(200);pm.expect(j.data.receipt).deep.eq(JSON.parse(env('withdraw_receipt')));});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.05 Sucursal consulta depósito 50.15",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{sucursal_url}}/api/cuentas/{{deposit_account}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Sucursal ve depósito del cajero',()=>{pm.response.to.have.status(200);pm.expect(cents(j.saldo)).eq(5015);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.06 Sin depósito ficticio de apertura cero",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-KEY",
+                "value": "{{sucursal_api_key}}"
+              }
+            ],
+            "url": "{{central_url}}/api/transactions?cuenta={{deposit_account}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Sucursal no registra depósito con monto cero',()=>{pm.response.to.have.status(200);pm.expect(j.total).eq(0);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.07 Inventario local final",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/admin"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Efectivo local coincide con retiros y depósitos únicos',()=>{pm.response.to.have.status(200);pm.expect(cash('cash-confirmed')).eq(Number(env('cash_initial'))-24985);pm.expect(cash('cash-available')).eq(Number(env('cash_initial'))-24985);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.08 Inventario central final",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-KEY",
+                "value": "{{cajero_api_key}}"
+              }
+            ],
+            "url": "{{central_url}}/api/nodes/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Inventario central coincide con el local',()=>{pm.response.to.have.status(200);pm.expect(cents(j.data.efectivo_disponible)).eq(Number(env('cash_initial'))-24985);});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 - Después de reiniciar Render (solo consultas)",
+      "item": [
+        {
+          "name": "04.01 Salud de cajero reiniciado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Cajero recupera PostgreSQL',()=>{pm.response.to.have.status(200);pm.expect(j.status).eq('ok');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.02 Comprobante de retiro persistente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/operaciones/{{operation_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Mismo ID y comprobante después del reinicio',()=>{pm.response.to.have.status(200);pm.expect(j.data.id).eq(env('operation_id'));pm.expect(j.data.receipt).deep.eq(JSON.parse(env('withdraw_receipt')));});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.03 Comprobante de depósito persistente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/operaciones/{{deposit_operation_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Depósito persistente después del reinicio',()=>{pm.response.to.have.status(200);pm.expect(j.data.receipt).deep.eq(JSON.parse(env('deposit_receipt')));});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.04 Saldo principal conserva 700",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/api/accounts/{{numero_cuenta}}/saldo"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Sin segundo débito después del reinicio',()=>{pm.response.to.have.status(200);pm.expect(j.data.saldo_global).eq('700.00');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.05 Sesión e inventario sobreviven al reinicio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cajero_url}}/admin"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = (()=>{try{return pm.response.json();}catch{return null;}})();",
+                  "const env = key => pm.environment.get(key);",
+                  "const cents = value => { const m=String(value).match(/^(\\d+)(?:\\.(\\d{1,2}))?$/); if(!m)throw Error('Importe inválido'); return Number(m[1])*100+Number((m[2]||'').padEnd(2,'0')); };",
+                  "const check = (name, fn) => pm.test(name, fn);",
+                  "const cash = id => { const section=pm.response.text().split('id=\"'+id+'\">')[1]; if(!section)throw Error('Inventario privado no encontrado'); return cents(section.split(' MXN')[0].replace('$','')); };",
+                  "check('Sesión e inventario persisten en PostgreSQL',()=>{pm.response.to.have.status(200);pm.expect(cash('cash-confirmed')).eq(Number(env('cash_initial'))-24985);pm.expect(cash('cash-available')).eq(Number(env('cash_initial'))-24985);});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.request.method === 'POST' && pm.environment.get('permitir_operaciones') !== 'true') { pm.execution.skipRequest(); throw Error('Autoriza la demostración con permitir_operaciones=true en un entorno privado.'); }"
+        ]
+      }
+    }
+  ]
+}

@@ -9,7 +9,7 @@ Los clientes ingresan solo un número de cuenta: **es una simulación, no autent
 - Adaptador actualizado al formato Laravel revisado: cuenta sin `data`, clave de idempotencia en JSON y transacciones en la raíz (201/200).
 - Banco Central simulado disponible para desarrollar sin depender del trabajo de otros integrantes.
 - La integración con NODE1 requiere URL, API Key propia y el contrato descrito en [docs/central-contract.md](docs/central-contract.md). Las rutas de identidad, recuperación, efectivo e idempotencia ya están implementadas y desplegadas en NODE1.
-- El despliegue en Render está preparado en `render.yaml`; todavía requiere conectar el repositorio y completar las variables privadas en Render.
+- Desplegado en [Render](https://node3-atm.onrender.com), con PostgreSQL 17 propio y configuración persistente.
 - El trabajo y el repositorio abarcan únicamente NODE3. No se ejecutan migraciones sobre Supabase ni se modifican otros nodos.
 
 ## Arquitectura
@@ -76,12 +76,12 @@ Para desarrollo con recarga automática: `npm run dev`. Para detener solo la bas
 
 ## Integración real sin reutilizar la demostración
 
-El contrato acordado y la lista concreta de pendientes para el equipo de NODE1 están en [docs/central-contract.md](docs/central-contract.md). NODE1 ya ofrece identidad, recuperación por clave y comprobantes persistentes. URL real: `https://banco-central-nodo1.onrender.com/api`. La aceptación de NODE3 se registra con sus pruebas y el flujo Postman conjunto.
+El contrato central disponible están en [docs/central-contract.md](docs/central-contract.md). NODE1 ya ofrece identidad, recuperación por clave y comprobantes persistentes. URL real: `https://banco-central-nodo1.onrender.com/api`. La aceptación de NODE3 se registra con sus pruebas y el flujo Postman conjunto.
 
-Cuando NODE1 entregue su URL efectiva, prepara una configuración independiente:
+Para ejecutar también la integración local, prepara una configuración independiente:
 
 ```bash
-npm run setup:integration -- --central-url=https://URL-REAL-DE-NODE1
+npm run setup:integration -- --central-url=https://banco-central-nodo1.onrender.com
 ```
 
 Crea `.env.integration` y `.local-admin.integration.txt` privados e ignorados por Git, con secretos nuevos y sin API Key simulada. No modifica `.env` ni la base existente. Usa un PostgreSQL y volumen separados en **55435**, y NODE3 en **3004** para convivir con la demostración en 3003.
@@ -169,17 +169,17 @@ Las pruebas crean un esquema aleatorio propio dentro de esa base y eliminan solo
 
 Se verifica el contrato Laravel (incluidos 201/200, clave en JSON, errores antiguos y comprobantes incompletos), el flujo $1,000 → $300 → $700, depósitos, efectivo insuficiente, cuenta bloqueada, claves duplicadas, concurrencia, pérdida de respuesta, timeout real, datos centrales incompatibles, recuperación tras recrear el servicio, sesiones y protección del panel.
 
-GitHub Actions ejecuta la suite con PostgreSQL 17 y Node 24.19.0. Render está configurado para desplegar después de que pasen los checks de la rama conectada.
+GitHub Actions ejecuta la suite con PostgreSQL 17 y Node 24.19.0, verifica dependencias de producción y despliega el commit aprobado a Render. El secreto `RENDER_DEPLOY_HOOK_URL` vive exclusivamente en GitHub Actions. No es necesario ampliar el acceso de la aplicación de GitHub para desplegar este repositorio público.
 
 ## Despliegue en Render
 
 1. Publica la rama revisada en el repositorio de NODE3 y conecta ese repositorio desde **New → Blueprint** en Render.
-2. Selecciona la rama que contiene `render.yaml`; el archivo crea **un Web Service gratuito y un PostgreSQL gratuito**, ambos en Oregon.
+2. Selecciona `main`, que contiene `render.yaml`; el archivo crea **un Web Service gratuito y un PostgreSQL gratuito**, ambos en Oregon.
 3. Completa `BANCO_CENTRAL_URL`, `ADMIN_PASSWORD_HASH` y `CONFIG_ENCRYPTION_KEY` en el formulario privado. Puedes obtener hash y clave de una configuración privada generada con `setup:local`; no subas `.env` ni la contraseña a Git. Render genera `SESSION_SECRET` y conecta `DATABASE_URL` internamente.
-4. Espera los checks de GitHub y el despliegue. Verifica `/health` y entra al panel para registrar la API Key real del cajero.
+4. Guarda el Deploy Hook del servicio en el secreto GitHub `RENDER_DEPLOY_HOOK_URL`. El workflow despliega cada push a `main` después de pasar las pruebas. Espera el despliegue. Verifica `/health` y entra al panel para registrar la API Key real del cajero.
 5. Completa la demostración integrada con NODE1 y NODE2. Registra aquí la URL real, sin inventarla:
 
-   **URL de NODE3: pendiente de despliegue.**
+   **URL de NODE3: https://node3-atm.onrender.com**
 
 La cuenta Render debe tener disponible su cupo de una base PostgreSQL gratuita. El servicio gratuito se suspende tras 15 minutos de inactividad y tarda en despertar. **La base gratuita caduca a los 30 días**; planifica la demostración dentro de esa ventana o exporta/restaura antes de la caducidad. Exportación desde un cliente con acceso autorizado: `pg_dump "$DATABASE_URL" --format=custom --file=backups/node3.dump`; restauración en una base nueva y vacía: `pg_restore --dbname="$DATABASE_URL" backups/node3.dump`. Los respaldos contienen datos privados y deben mantenerse fuera de Git. La conexión externa para respaldos requiere habilitar temporalmente una IP autorizada en Render, ya que el Blueprint bloquea acceso externo por defecto.
 
@@ -199,3 +199,9 @@ Fuentes: [Express 5](https://expressjs.com/en/guide/migrating-5/), [Express en R
 6. NODE3 muestra el comprobante y **$300 menos de efectivo disponible**.
 
 No se presenta la prueba contra el simulador como integración real con Supabase. La validación de RLS y de la inmutabilidad global corresponde al Banco Central.
+
+## Postman conjunto
+
+Importar [colección de los tres nodos](postman/tres_nodos_render.postman_collection.json) y [entorno Render sin secretos](postman/tres_nodos_render.postman_environment.json). Completar en un entorno privado las dos API Keys y las credenciales del técnico. Activar `permitir_operaciones=true` para la demostración autorizada.
+
+Las carpetas 00–03 crean una cuenta nueva de $1,000, retiran $300 desde NODE3 y mantienen su saldo en $700. El depósito de $50.15 usa otra cuenta, sin alterar la cuenta de la demostración. El inventario local se verifica mediante la sesión técnica; no se expone al cliente público. La carpeta 04 reutiliza los identificadores después de reiniciar Render y no crea movimientos.
