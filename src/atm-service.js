@@ -52,12 +52,13 @@ export class AtmService {
       'INVALID_API_KEY', 'Ingresa una API Key válida proporcionada por el Banco Central.', 422);
     return transaction(this.pool, async client => {
       const row = (await client.query('SELECT * FROM atm_settings WHERE id = 1 FOR UPDATE')).rows[0];
-      invariant(!row.active_operation_id, 'ATM_BUSY', 'Primero debe resolverse la operación pendiente.', 409);
       const node = await this.bank.getNode(apiKey.trim());
       invariant(!row.node_id || row.node_id === node.id, 'ATM_IDENTITY_MISMATCH', 'La nueva API Key debe pertenecer al mismo cajero configurado.', 409);
+      // Rotation must allow recovery after revocation of the previous key. A pending
+      // receipt may describe earlier cash, so preserve the local reservation until recovery.
       await client.query('UPDATE atm_settings SET node_id=$1, node_name=$2, api_key_ciphertext=$3, cash_cents=$4, updated_at=NOW() WHERE id=1',
-        [node.id, node.nombre, encrypt(apiKey.trim(), this.encryptionKey), String(parseMoney(node.cash))]);
-      return { node_id: node.id, nombre: node.nombre, efectivo_disponible: node.cash };
+        [node.id, node.nombre, encrypt(apiKey.trim(), this.encryptionKey), row.active_operation_id ? row.cash_cents : String(parseMoney(node.cash))]);
+      return { node_id: node.id, nombre: node.nombre, efectivo_disponible: row.active_operation_id ? formatMoney(row.cash_cents) : node.cash };
     });
   }
 

@@ -119,7 +119,9 @@ describe('NODE3 con PostgreSQL real y Banco Central simulado', { skip: !process.
     assert.equal((await service.adminStatus()).efectivo_confirmado, '5000.00');
     assert.equal((await service.adminStatus()).efectivo_disponible, '4700.00');
     await assert.rejects(() => service.synchronize(), { code: 'ATM_BUSY' });
-    await assert.rejects(() => service.configure(bank.state.apiKey), { code: 'ATM_BUSY' });
+    await service.configure(bank.state.apiKey);
+    assert.equal((await service.adminStatus()).efectivo_confirmado, '5000.00');
+    assert.equal((await service.adminStatus()).efectivo_disponible, '4700.00');
     const recovered = await request(app).get(`/api/operaciones/${id}`).expect(200);
     assert.equal(recovered.body.data.receipt.saldo_global, '700.00');
     assert.equal(bank.state.transactionCount, 1);
@@ -181,6 +183,27 @@ describe('NODE3 con PostgreSQL real y Banco Central simulado', { skip: !process.
     await assert.rejects(() => service.configure(bank.state.apiKey), { code: 'ATM_IDENTITY_MISMATCH' });
     const cipher = (await service.settings()).api_key_ciphertext;
     assert.ok(!cipher.includes(bank.state.apiKey));
+  });
+
+  test('rotar la clave del mismo cajero permite recuperar un débito pendiente sin cambiar su reserva', async () => {
+    bank.state.dropNextResponse = true;
+    const result = await post().expect(202);
+    bank.state.apiKey = 'rotated-api-key-for-tests';
+    await request(app).get(`/api/operaciones/${result.body.data.id}`).expect(202);
+    const agent = request.agent(app);
+    await login(agent);
+    const page = await agent.get('/admin').expect(200);
+    await agent.post('/admin/configuracion').type('form').send({ _csrf: csrf(page.text), api_key: bank.state.apiKey }).expect(200);
+    const reserved = await service.adminStatus();
+    assert.equal(reserved.efectivo_confirmado, '5000.00');
+    assert.equal(reserved.efectivo_disponible, '4700.00');
+    assert.equal(reserved.pending.id, result.body.data.id);
+    await assert.rejects(() => service.synchronize(), { code: 'ATM_BUSY' });
+    const restarted = new AtmService(pool, new BankClient(config), config.encryptionKey);
+    await restarted.recoverPending();
+    assert.equal((await restarted.getOperation(result.body.data.id)).status, 'succeeded');
+    assert.equal((await restarted.adminStatus()).efectivo_confirmado, '4700.00');
+    assert.equal(bank.state.transactionCount, 1);
   });
   test('la configuración y el efectivo sobreviven a un nuevo servicio sin volver a cargar el importe inicial', async () => {
     await post().expect(200);

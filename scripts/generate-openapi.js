@@ -22,7 +22,7 @@ const spec = {
   servers: [{ url: '/', description: 'Mismo origen que la aplicación' }],
   paths: {
     '/health': { get: { summary: 'Comprobar servicio y PostgreSQL propio', responses: {
-      200: response('Disponible.', { type: 'object', required: ['status'], properties: { status: { type: 'string', enum: ['ok'] } } }),
+      200: response('Disponible.', { type: 'object', required: ['status'], properties: { status: { type: 'string', enum: ['ok'] }, service: { type: 'string', enum: ['node3-atm'] }, commit: { type: 'string', nullable: true }, branch: { type: 'string', nullable: true } } }),
       503: response('No disponible.', { type: 'object', required: ['status'], properties: { status: { type: 'string', enum: ['unavailable'] } } }),
     } } },
     '/api/atm': { get: { summary: 'Estado público, sin inventario ni secretos', responses: { 200: response('Estado del cajero.', envelope({ type: 'object', required: ['configured', 'available', 'mode'], properties: { configured: { type: 'boolean' }, available: { type: 'boolean' }, mode: { type: 'string', enum: ['simulacion'] } } })) } } },

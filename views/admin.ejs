@@ -8,8 +8,8 @@
   <dl class="details">
     <dt>Configuración</dt><dd><%= state.configured ? 'Verificada con el Banco Central' : 'Pendiente' %></dd>
     <dt>Identificador central</dt><dd><%= state.node_id || 'Sin asignar' %></dd>
-    <dt>Efectivo confirmado</dt><dd>$<%= state.efectivo_confirmado %> MXN</dd>
-    <dt>Efectivo disponible</dt><dd>$<%= state.efectivo_disponible %> MXN</dd>
+    <dt>Efectivo confirmado</dt><dd id="cash-confirmed">$<%= state.efectivo_confirmado %> MXN</dd>
+    <dt>Efectivo disponible</dt><dd id="cash-available">$<%= state.efectivo_disponible %> MXN</dd>
     <dt>API Key</dt><dd><%= state.api_key_configurada ? '•••••••• · guardada cifrada' : 'Sin configurar' %></dd>
   </dl>
   <% if (state.configured) { %><form method="post" action="/admin/sincronizar"><input type="hidden" name="_csrf" value="<%= csrf %>"><button type="submit" class="secondary" <%= state.pending ? 'disabled' : '' %>>Sincronizar efectivo con el banco</button></form><% } %>
@@ -19,8 +19,9 @@
   <p class="helper">Servidor configurado: <span class="break-word"><%= centralUrl %></span></p>
   <form method="post" action="/admin/configuracion" class="stacked-form">
     <input type="hidden" name="_csrf" value="<%= csrf %>">
-    <div class="field"><label for="api_key"><%= state.configured ? 'Nueva API Key del mismo cajero' : 'API Key proporcionada por el banco' %></label><input id="api_key" name="api_key" type="password" autocomplete="off" minlength="16" maxlength="512" required <%= state.pending ? 'disabled' : '' %>></div>
-    <button type="submit" <%= state.pending ? 'disabled' : '' %>>Verificar y guardar conexión</button>
+    <div class="field"><label for="api_key"><%= state.configured ? 'Nueva API Key del mismo cajero' : 'API Key proporcionada por el banco' %></label><input id="api_key" name="api_key" type="password" autocomplete="off" minlength="16" maxlength="512" required></div>
+    <button type="submit">Verificar y guardar conexión</button>
+    <% if (state.pending) { %><p class="helper">Puedes registrar una clave nueva del mismo cajero para recuperar esta operación. El efectivo reservado se conserva; la sincronización sigue bloqueada.</p><% } %>
   </form>
 </section>
 <% if (state.pending) { %><section class="work-area pending-area" aria-labelledby="pending-title"><h2 id="pending-title">Operación pendiente de confirmación</h2>

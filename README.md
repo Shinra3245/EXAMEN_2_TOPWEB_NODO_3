@@ -8,7 +8,7 @@ Los clientes ingresan solo un número de cuenta: **es una simulación, no autent
 
 - Adaptador actualizado al formato Laravel revisado: cuenta sin `data`, clave de idempotencia en JSON y transacciones en la raíz (201/200).
 - Banco Central simulado disponible para desarrollar sin depender del trabajo de otros integrantes.
-- La integración con NODE1 requiere URL, API Key propia y el contrato descrito en [docs/central-contract.md](docs/central-contract.md). Las rutas de validación del nodo y recuperación son **propuestas**, no capacidades verificadas de NODE1.
+- La integración con NODE1 requiere URL, API Key propia y el contrato descrito en [docs/central-contract.md](docs/central-contract.md). Las rutas de identidad, recuperación, efectivo e idempotencia ya están implementadas y desplegadas en NODE1.
 - El despliegue en Render está preparado en `render.yaml`; todavía requiere conectar el repositorio y completar las variables privadas en Render.
 - El trabajo y el repositorio abarcan únicamente NODE3. No se ejecutan migraciones sobre Supabase ni se modifican otros nodos.
 
@@ -76,7 +76,7 @@ Para desarrollo con recarga automática: `npm run dev`. Para detener solo la bas
 
 ## Integración real sin reutilizar la demostración
 
-El contrato acordado y la lista concreta de pendientes para el equipo de NODE1 están en [docs/central-contract.md](docs/central-contract.md). El código local revisado todavía no tiene las rutas de identidad y recuperación, ni todos los campos de confirmación. No habilitar movimientos reales hasta que su responsable complete y pruebe esas extensiones.
+El contrato acordado y la lista concreta de pendientes para el equipo de NODE1 están en [docs/central-contract.md](docs/central-contract.md). NODE1 ya ofrece identidad, recuperación por clave y comprobantes persistentes. URL real: `https://banco-central-nodo1.onrender.com/api`. La aceptación de NODE3 se registra con sus pruebas y el flujo Postman conjunto.
 
 Cuando NODE1 entregue su URL efectiva, prepara una configuración independiente:
 
@@ -111,7 +111,7 @@ Para detener la base conservando el volumen: `docker compose --env-file .env.int
 | `LOCAL_DATABASE_PASSWORD` | Contraseña del contenedor de desarrollo |
 | `MOCK_CENTRAL_API_KEY` | Solo para el simulador local |
 
-El panel valida la identidad, estado y efectivo del cajero mediante `/api/nodes/me`. Las garantías financieras del contrato se comprueban con las pruebas conjuntas; no se deducen de flags de capacidades. No permite sustituir la identidad del cajero después de configurarlo. La rotación debe conservar el mismo ID central.
+El panel valida la identidad, estado y efectivo del cajero mediante `/api/nodes/me`. Las garantías financieras del contrato se comprueban con las pruebas conjuntas; no se deducen de flags de capacidades. No permite sustituir la identidad del cajero después de configurarlo. La rotación debe conservar el mismo ID central. Se permite incluso con una operación pendiente para recuperar un débito con la nueva clave, sin sincronizar ni liberar el efectivo reservado.
 
 Las sesiones administrativas se guardan en PostgreSQL y caducan a los 30 minutos. Las cookies son HttpOnly y SameSite=Strict, con Secure en producción. Los formularios administrativos validan CSRF. La aplicación aplica límites de solicitudes y cabeceras de seguridad; los mensajes no muestran respuestas centrales crudas ni secretos.
 
@@ -185,7 +185,7 @@ La cuenta Render debe tener disponible su cupo de una base PostgreSQL gratuita. 
 
 Render no conserva archivos locales del Web Service entre reinicios. Por eso el efectivo, las operaciones y las sesiones se guardan en PostgreSQL.
 
-**Diferencia respecto del examen:** se eligió únicamente Render por decisión del equipo/usuario. El documento original también solicita Vercel y Coolify; corresponde revisar con el profesor esa diferencia de infraestructura.
+**Infraestructura acordada con el profesor:** Render es el despliegue principal; Vercel y Coolify son opcionales.
 
 Fuentes: [Express 5](https://expressjs.com/en/guide/migrating-5/), [Express en Render](https://render.com/docs/deploy-node-express-app), [límites gratuitos](https://render.com/docs/free), [Blueprints](https://render.com/docs/blueprint-spec).
 

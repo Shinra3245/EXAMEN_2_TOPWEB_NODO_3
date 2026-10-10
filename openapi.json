@@ -31,6 +31,20 @@
                       "enum": [
                         "ok"
                       ]
+                    },
+                    "service": {
+                      "type": "string",
+                      "enum": [
+                        "node3-atm"
+                      ]
+                    },
+                    "commit": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "branch": {
+                      "type": "string",
+                      "nullable": true
                     }
                   }
                 }

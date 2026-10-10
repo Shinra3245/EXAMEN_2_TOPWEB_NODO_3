@@ -59,7 +59,7 @@ export function createApp({ config, pool, service }) {
     handler: (req, res) => res.status(429).render('error', { title: 'Espera para volver a ingresar', message: 'Demasiados intentos de acceso. Intenta de nuevo en 15 minutos.', code: 'RATE_LIMIT' }) });
 
   app.get('/health', async (req, res) => {
-    try { await pool.query('SELECT 1'); res.json({ status: 'ok' }); }
+    try { await pool.query('SELECT 1'); res.json({ status: 'ok', service: 'node3-atm', commit: process.env.RENDER_GIT_COMMIT || null, branch: process.env.RENDER_GIT_BRANCH || null }); }
     catch { res.status(503).json({ status: 'unavailable' }); }
   });
   app.get('/', async (req, res) => res.render('atm', { status: await service.publicStatus() }));

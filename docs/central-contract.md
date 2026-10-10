@@ -1,18 +1,19 @@
 # Contrato de integración NODE1 ↔ NODE3
 
-**Estado: propuesta de ampliaciones compatibles; implementación central pendiente.** Revisado contra NODE1 `0b70389` y NODE2 `ae8dceb`. NODE3 ya implementa su adaptador; las rutas nuevas y confirmaciones ampliadas aún deben implementarse en NODE1. Esta revisión no valida esos cambios futuros en Render. Solo se modifica documentación de NODE3.
+**Estado: implementado y desplegado en NODE1**, verificado con el Core `7fc14e3` y NODE2 `fae8349`. URL: `https://banco-central-nodo1.onrender.com/api`.
 
-## Lo que ofrece el código revisado de NODE1
+## Contrato central disponible
 
-| Ruta | Contrato observado | Adaptación NODE3 |
-| --- | --- | --- |
-| `GET /api/accounts/{numero_cuenta}` | Cuenta directamente en la raíz; 404 `{message: "Cuenta no encontrada"}` | Implementada |
-| `POST /api/transactions` | `idempotency_key` obligatoria en JSON; 201 nuevo / 200 repetido; `{message, transaction}` | Cuerpo y formato adaptados; confirmar exige los campos adicionales definidos abajo |
-| `GET /api/transactions` | Historial paginado; no consulta específica por clave | No se utiliza para determinar que una operación no existe |
-| `GET /api/nodes/me` | No presente en las rutas revisadas | Debe añadirlo NODE1 |
-| `GET /api/transactions/by-idempotency-key/{clave}` | No presente en las rutas revisadas | Debe añadirlo NODE1 |
+| Ruta | Contrato disponible |
+| --- | --- |
+| `GET /api/accounts/{numero_cuenta}` | Cuenta en la raíz; conserva cuentas compartidas entre nodos |
+| `POST /api/transactions` | Clave en JSON; 201 nuevo / 200 repetido; comprobante y saldos originales para cajeros |
+| `GET /api/transactions` | Historial financiero paginado del nodo autenticado |
+| `GET /api/nodes/me` | Identidad activa, tipo y efectivo actual |
+| `GET /api/transactions/by-idempotency-key/{clave}` | Resultado persistente del mismo nodo; 404 `OPERATION_NOT_FOUND` autoriza reenvío |
 
-La validación existente devuelve `422 {errors: {...}}`, la autenticación `401 {error: "..."}` y los rechazos de movimientos `400/409 {message: "..."}`. NODE3 no muestra esos mensajes internos. Un error antiguo de movimiento no demuestra que una solicitud anterior con la misma clave no se haya aplicado.
+La autenticación mantiene 401 con `error` de texto. Los rechazos ATM persistidos usan el objeto estructurado y la misma clave definidos abajo. Un error de autenticación, conflicto, red o servidor nunca libera una reserva incierta.
+
 
 ## Compatibilidad obligatoria con NODE2
 
@@ -71,7 +72,7 @@ NODE3 exige un cajero activo y efectivo válido. No exige campos `capabilities`:
 
 La ruta no restringe globalmente a los clientes de la API a `tipo: cajero`: esa comprobación la realiza NODE3 para su propia configuración.
 
-Esta consulta entrega efectivo **actual**, no una asignación inicial constante. Un reinicio local conserva configuración, efectivo, sesiones y pendientes en PostgreSQL propio. La sincronización administrativa solo se permite sin pendientes y con el mismo ID central. Rotar la API Key debe conservar ese ID.
+Esta consulta entrega efectivo **actual**, no una asignación inicial constante. Un reinicio local conserva configuración, efectivo, sesiones y pendientes en PostgreSQL propio. La sincronización administrativa solo se permite sin pendientes y con el mismo ID central. Rotar la API Key debe conservar ese ID. Con un pendiente se permite guardar la clave verificada del mismo cajero, manteniendo efectivo y reserva anteriores hasta recuperar el resultado.
 
 ## 2. Cuenta: GET /api/accounts/{numero_cuenta}
 
@@ -182,7 +183,7 @@ NODE1 proporciona URL HTTPS efectiva, API Key e ID del cajero activo con efectiv
 
 Comprobar: consulta 1000.00, retiro 300.00, saldo 700.00, efectivo reducido en 300.00 y una sola transacción; depósito; saldo/efectivo insuficientes; cuenta bloqueada; API Key inválida; concurrencia; conflictos de clave; respuesta perdida; reinicio y recuperación. Verificar además que el historial global es inmutable según el examen (responsabilidad NODE1).
 
-El simulador incluido prueba NODE3 con el contrato acordado. No demuestra que NODE1 ni Supabase lo cumplan. La aceptación real permanece pendiente hasta ejecutar el flujo contra el servidor central autorizado.
+El simulador incluido prueba NODE3 con el contrato acordado. No demuestra que NODE1 ni Supabase lo cumplan. La aceptación del cajero se registra en el reporte de integración y la colección Postman; las pruebas del simulador se mantienen separadas de las pruebas reales.
 
 ## 7. Evidencia de revisión de compatibilidad
 

@@ -28,6 +28,7 @@ jobs:
           node-version: 24.19.0
           cache: npm
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=moderate
       - run: npm test
         env:
           TEST_DATABASE_URL: postgresql://atm_test:test_only_ci@127.0.0.1:5432/atm_test
