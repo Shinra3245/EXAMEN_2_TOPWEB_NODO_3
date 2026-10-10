@@ -1,0 +1,39 @@
+<%- include('partials/header', { title: 'Cajero automático' }) %>
+<section class="page-heading">
+  <p class="eyebrow">BIENVENIDO</p>
+  <h1>Tu cajero automático</h1>
+  <p>Consulta tu saldo, retira efectivo o realiza un depósito.</p>
+  <span class="status <%= status.available ? 'status-ok' : 'status-warn' %>" id="atm-status"><%= !status.configured ? 'Pendiente de configuración' : status.available ? 'Cajero disponible' : 'Confirmando una operación' %></span>
+</section>
+<p class="notice">Modo de simulación académica: ingresar una cuenta no autentica a su titular.</p>
+<section class="work-area" aria-labelledby="account-title">
+  <div class="step-label">01 · CUENTA</div>
+  <h2 id="account-title">Ingresa tu número de cuenta</h2>
+  <form id="balance-form" class="account-form">
+    <div class="field"><label for="numero_cuenta">Número de cuenta</label><input id="numero_cuenta" name="numero_cuenta" type="text" maxlength="255" autocomplete="off" required placeholder="Ej. 10001"></div>
+    <button type="submit" id="balance-button" <%= !status.configured ? 'disabled' : '' %>>Consultar saldo</button>
+  </form>
+  <div id="balance-result" class="balance-line" hidden><span id="holder-name"></span><strong id="balance-amount"></strong><small>Saldo confirmado por el Banco Central</small></div>
+</section>
+<section class="work-area" aria-labelledby="movement-title">
+  <div class="step-label">02 · OPERACIÓN</div>
+  <h2 id="movement-title">¿Qué deseas hacer?</h2>
+  <form id="movement-form">
+    <fieldset class="operation-choice"><legend class="sr-only">Tipo de operación</legend>
+      <label><input type="radio" name="tipo" value="retiro" checked><span>Retirar efectivo</span></label>
+      <label><input type="radio" name="tipo" value="deposito"><span>Depositar efectivo</span></label>
+    </fieldset>
+    <div class="movement-row"><div class="field"><label for="monto">Importe en pesos</label><div class="money-input"><span aria-hidden="true">$</span><input id="monto" name="monto" type="number" min="0.01" max="9999999999999.99" step="0.01" inputmode="decimal" placeholder="300.00" required></div></div>
+      <button id="movement-button" type="submit" <%= !status.configured ? 'disabled' : '' %>>Confirmar operación</button>
+    </div>
+    <p class="helper">Los depósitos aprobados quedan disponibles para futuros retiros de este cajero.</p>
+  </form>
+</section>
+<section id="result-area" class="result-area" aria-live="polite" aria-atomic="true" hidden>
+  <h2 id="result-title">Resultado de la operación</h2>
+  <p id="result-message"></p>
+  <dl id="receipt" class="details" hidden></dl>
+  <button type="button" id="recover-button" class="secondary" hidden>Consultar confirmación</button>
+</section>
+<script src="/assets/atm.js" defer></script>
+<%- include('partials/footer') %>

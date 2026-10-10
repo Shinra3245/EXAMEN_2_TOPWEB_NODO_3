@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: node3-atm
+    runtime: node
+    plan: free
+    region: oregon
+    autoDeployTrigger: checksPass
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: node3-atm-db
+          property: connectionString
+      - key: BANCO_CENTRAL_URL
+        sync: false
+      - key: ADMIN_USERNAME
+        value: tecnico
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: CONFIG_ENCRYPTION_KEY
+        sync: false
+      - key: CENTRAL_TIMEOUT_MS
+        value: 10000
+
+databases:
+  - name: node3-atm-db
+    plan: free
+    region: oregon
+    postgresMajorVersion: "17"
+    databaseName: node3_atm
+    user: node3_atm
+    ipAllowList: []

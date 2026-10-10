@@ -1,0 +1,688 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "NODE3 · Cajero automático",
+    "version": "1.0.0",
+    "description": "API de simulación académica. El backend consume NODE1 con su API Key privada; no hay autenticación real del cliente."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Mismo origen que la aplicación"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Comprobar servicio y PostgreSQL propio",
+        "responses": {
+          "200": {
+            "description": "Disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "unavailable"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/atm": {
+      "get": {
+        "summary": "Estado público, sin inventario ni secretos",
+        "responses": {
+          "200": {
+            "description": "Estado del cajero.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "configured",
+                        "available",
+                        "mode"
+                      ],
+                      "properties": {
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "available": {
+                          "type": "boolean"
+                        },
+                        "mode": {
+                          "type": "string",
+                          "enum": [
+                            "simulacion"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/{numero}/saldo": {
+      "get": {
+        "summary": "Consultar saldo central",
+        "parameters": [
+          {
+            "name": "numero",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cuenta activa y saldo central.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Account"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Cuenta inválida, bloqueada o inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Contrato central incompatible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco Central no disponible o cajero sin configurar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/retiros": {
+      "post": {
+        "summary": "Retirar efectivo",
+        "description": "Simulación de retiro. No autentica al titular de la cuenta. Reutilizar la misma clave y el mismo cuerpo al reintentar.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MovementRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación local y su resultado central.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Operation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Confirmación pendiente; conservar clave e identificador.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Operation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Cajero ocupado o clave reutilizada con otros datos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Se requiere application/json.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validación o rechazo definitivo. El rechazo de una operación devuelve data; los errores previos devuelven error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "data"
+                      ],
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Operation"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorEnvelope"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Límite de solicitudes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Cajero sin configurar o almacenamiento no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/depositos": {
+      "post": {
+        "summary": "Depositar efectivo",
+        "description": "Simulación de depósito. No autentica al titular de la cuenta. Reutilizar la misma clave y el mismo cuerpo al reintentar.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MovementRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación local y su resultado central.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Operation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Confirmación pendiente; conservar clave e identificador.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Operation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Cajero ocupado o clave reutilizada con otros datos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Se requiere application/json.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validación o rechazo definitivo. El rechazo de una operación devuelve data; los errores previos devuelven error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "data"
+                      ],
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Operation"
+                        }
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorEnvelope"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Límite de solicitudes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Cajero sin configurar o almacenamiento no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operaciones/{id}": {
+      "get": {
+        "summary": "Consultar y recuperar la misma operación",
+        "description": "Si está pendiente, consulta el estado central. Solo reenvía el movimiento con la clave original cuando el banco responde OPERATION_NOT_FOUND. El ID es opaco y debe conservarse.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación local y su resultado central.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Operation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Resultado todavía pendiente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Operation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Operación no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Money": {
+        "type": "string",
+        "pattern": "^\\d{1,13}\\.\\d{2}$",
+        "example": "300.00",
+        "description": "Importe decimal exacto en MXN."
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/Error"
+          }
+        }
+      },
+      "MovementRequest": {
+        "type": "object",
+        "required": [
+          "numero_cuenta",
+          "monto"
+        ],
+        "properties": {
+          "numero_cuenta": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "10001"
+          },
+          "monto": {
+            "type": "string",
+            "pattern": "^\\d{1,13}(?:\\.\\d{1,2})?$",
+            "example": "300.00",
+            "description": "Mayor que cero; enviar como texto para conservar los centavos."
+          }
+        }
+      },
+      "Account": {
+        "type": "object",
+        "required": [
+          "numero_cuenta",
+          "nombre_titular",
+          "saldo_global",
+          "estado"
+        ],
+        "properties": {
+          "numero_cuenta": {
+            "type": "string"
+          },
+          "nombre_titular": {
+            "type": "string"
+          },
+          "saldo_global": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "activa"
+            ]
+          }
+        }
+      },
+      "Receipt": {
+        "type": "object",
+        "required": [
+          "transaction_id",
+          "tipo",
+          "numero_cuenta",
+          "monto",
+          "saldo_global",
+          "efectivo_disponible",
+          "created_at"
+        ],
+        "properties": {
+          "transaction_id": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "retiro",
+              "deposito"
+            ]
+          },
+          "numero_cuenta": {
+            "type": "string"
+          },
+          "monto": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "saldo_global": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "efectivo_disponible": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Operation": {
+        "type": "object",
+        "required": [
+          "id",
+          "idempotency_key",
+          "tipo",
+          "numero_cuenta",
+          "monto",
+          "status",
+          "receipt",
+          "error",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "retiro",
+              "deposito"
+            ]
+          },
+          "numero_cuenta": {
+            "type": "string"
+          },
+          "monto": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "succeeded",
+              "rejected"
+            ]
+          },
+          "receipt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Receipt"
+              }
+            ],
+            "nullable": true
+          },
+          "error": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ],
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

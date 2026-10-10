@@ -1,0 +1,12 @@
+<%- include('partials/header', { title: 'Acceso del técnico' }) %>
+<section class="page-heading"><p class="eyebrow">ADMINISTRACIÓN</p><h1>Acceso del técnico</h1><p>Configura la conexión y revisa el estado del cajero.</p></section>
+<section class="work-area login-area">
+  <% if (error) { %><p class="notice notice-error" role="alert"><%= error %></p><% } %>
+  <form method="post" action="/admin/login" class="stacked-form">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <div class="field"><label for="username">Usuario</label><input id="username" name="username" autocomplete="username" required maxlength="100"></div>
+    <div class="field"><label for="password">Contraseña</label><input id="password" name="password" type="password" autocomplete="current-password" required maxlength="512"></div>
+    <button type="submit">Ingresar</button>
+  </form>
+</section>
+<%- include('partials/footer') %>

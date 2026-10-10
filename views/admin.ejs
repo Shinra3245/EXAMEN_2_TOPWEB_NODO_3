@@ -1,0 +1,31 @@
+<%- include('partials/header', { title: 'Administración del cajero' }) %>
+<section class="page-heading admin-heading"><div><p class="eyebrow">ADMINISTRACIÓN</p><h1><%= state.nombre || 'Configurar cajero' %></h1><p>Conexión, efectivo y operaciones pendientes.</p></div>
+  <form method="post" action="/admin/logout"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="secondary" type="submit">Cerrar sesión</button></form>
+</section>
+<% if (message) { %><p class="notice notice-success" role="status"><%= message %></p><% } %>
+<% if (error) { %><p class="notice notice-error" role="alert"><%= error %></p><% } %>
+<section class="work-area" aria-labelledby="state-title"><h2 id="state-title">Estado operativo</h2>
+  <dl class="details">
+    <dt>Configuración</dt><dd><%= state.configured ? 'Verificada con el Banco Central' : 'Pendiente' %></dd>
+    <dt>Identificador central</dt><dd><%= state.node_id || 'Sin asignar' %></dd>
+    <dt>Efectivo confirmado</dt><dd>$<%= state.efectivo_confirmado %> MXN</dd>
+    <dt>Efectivo disponible</dt><dd>$<%= state.efectivo_disponible %> MXN</dd>
+    <dt>API Key</dt><dd><%= state.api_key_configurada ? '•••••••• · guardada cifrada' : 'Sin configurar' %></dd>
+  </dl>
+  <% if (state.configured) { %><form method="post" action="/admin/sincronizar"><input type="hidden" name="_csrf" value="<%= csrf %>"><button type="submit" class="secondary" <%= state.pending ? 'disabled' : '' %>>Sincronizar efectivo con el banco</button></form><% } %>
+  <p class="helper">El Banco Central asigna el efectivo. Cambiar la API Key o reiniciar el servidor no crea una nueva carga de dinero.</p>
+</section>
+<section class="work-area" aria-labelledby="connection-title"><h2 id="connection-title">Conexión con el Banco Central</h2>
+  <p class="helper">Servidor configurado: <span class="break-word"><%= centralUrl %></span></p>
+  <form method="post" action="/admin/configuracion" class="stacked-form">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <div class="field"><label for="api_key"><%= state.configured ? 'Nueva API Key del mismo cajero' : 'API Key proporcionada por el banco' %></label><input id="api_key" name="api_key" type="password" autocomplete="off" minlength="16" maxlength="512" required <%= state.pending ? 'disabled' : '' %>></div>
+    <button type="submit" <%= state.pending ? 'disabled' : '' %>>Verificar y guardar conexión</button>
+  </form>
+</section>
+<% if (state.pending) { %><section class="work-area pending-area" aria-labelledby="pending-title"><h2 id="pending-title">Operación pendiente de confirmación</h2>
+  <p>No repitas el movimiento con otra clave. El efectivo reservado se conserva hasta conocer el resultado central.</p>
+  <dl class="details"><dt>Operación</dt><dd><%= state.pending.id %></dd><dt>Tipo</dt><dd><%= state.pending.tipo %></dd><dt>Cuenta</dt><dd><%= state.pending.numero_cuenta %></dd><dt>Importe</dt><dd>$<%= state.pending.monto %> MXN</dd></dl>
+  <form method="post" action="/admin/recuperar"><input type="hidden" name="_csrf" value="<%= csrf %>"><button type="submit">Consultar resultado central</button></form>
+</section><% } %>
+<%- include('partials/footer') %>

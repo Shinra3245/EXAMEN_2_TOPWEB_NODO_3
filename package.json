@@ -1,0 +1,33 @@
+{
+  "name": "node3-atm",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Nodo 3: cajero automático del sistema bancario distribuido",
+  "engines": {
+    "node": ">=24.16.0 <25"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "dev": "node --watch --env-file-if-exists=.env src/server.js",
+    "migrate": "node --env-file-if-exists=.env scripts/migrate.js",
+    "setup:local": "node scripts/setup-local.js",
+    "mock:central": "node --env-file-if-exists=.env scripts/mock-central.js",
+    "docs": "node scripts/generate-openapi.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js",
+    "setup:integration": "node scripts/setup-local.js --integration",
+    "start:integration": "node --env-file=.env.integration src/server.js"
+  },
+  "dependencies": {
+    "connect-pg-simple": "^10.0.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "express-session": "^1.18.2",
+    "helmet": "^8.1.0",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "supertest": "^7.1.4"
+  }
+}
